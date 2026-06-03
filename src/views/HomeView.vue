@@ -16,9 +16,20 @@
         <button class="btn btn-primary" @click="createLobby">
           Create Lobby
         </button>
-        <button class="btn btn-secondary" @click="showJoinModal = true">
-          Join Lobby
-        </button>
+        <div class="join-row">
+          <input
+            v-model="joinCodeInput"
+            class="join-input"
+            maxlength="4"
+            placeholder="Code"
+            type="text"
+            @keydown.enter="joinLobby"
+          />
+          <button class="btn btn-secondary" @click="joinLobby" :disabled="joinCodeInput.length < 4">
+            Join Lobby
+          </button>
+        </div>
+        <p v-if="joinError" class="join-error">{{ joinError }}</p>
       </div>
     </div>
 
@@ -62,51 +73,17 @@
         {{ cameraActive ? 'Stop Camera' : 'Start Camera' }}
       </button>
     </div>
-
-    <Teleport to="body">
-      <div v-if="showJoinModal" class="modal-backdrop" @click.self="showJoinModal = false">
-        <div class="modal">
-          <button class="modal-close" @click="showJoinModal = false" aria-label="Close">✕</button>
-          <h2>Join a Lobby</h2>
-          <p>Enter the 4-character code from your host.</p>
-          <div class="code-inputs">
-            <input
-              v-for="i in 4"
-              :key="i"
-              :ref="el => { if (el) codeInputs[i-1] = el }"
-              class="code-char"
-              maxlength="1"
-              type="text"
-              @input="onCodeInput($event, i - 1)"
-              @keydown.backspace="onCodeBackspace($event, i - 1)"
-              @paste.prevent="onCodePaste($event)"
-            />
-          </div>
-          <button
-            class="btn btn-primary"
-            :disabled="joinCode.length < 4"
-            @click="joinLobby"
-          >
-            Join
-          </button>
-          <p v-if="joinError" class="join-error">{{ joinError }}</p>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const showJoinModal = ref(false)
-const codeInputs = ref([])
-const codeChars = ref(['', '', '', ''])
+const joinCodeInput = ref('')
 const joinError = ref('')
-const joinCode = computed(() => codeChars.value.join(''))
 
 const videoEl = ref(null)
 const cameraActive = ref(false)
@@ -125,36 +102,10 @@ function createLobby() {
 }
 
 function joinLobby() {
-  const code = joinCode.value.toUpperCase()
+  const code = joinCodeInput.value.trim().toUpperCase()
   if (code.length !== 4) return
   joinError.value = ''
   router.push(`/lobby/${code}`)
-}
-
-function onCodeInput(e, index) {
-  const val = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
-  e.target.value = val.slice(-1)
-  codeChars.value[index] = e.target.value
-  if (e.target.value && index < 3) {
-    codeInputs.value[index + 1]?.focus()
-  }
-}
-
-function onCodeBackspace(e, index) {
-  if (!codeChars.value[index] && index > 0) {
-    codeChars.value[index - 1] = ''
-    codeInputs.value[index - 1].value = ''
-    codeInputs.value[index - 1]?.focus()
-  }
-}
-
-function onCodePaste(e) {
-  const text = e.clipboardData.getData('text').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4)
-  text.split('').forEach((char, i) => {
-    codeChars.value[i] = char
-    if (codeInputs.value[i]) codeInputs.value[i].value = char
-  })
-  codeInputs.value[Math.min(text.length, 3)]?.focus()
 }
 
 async function toggleCamera() {
@@ -183,36 +134,40 @@ onUnmounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
 
 .home {
-  --bg:          #0e0e0f;
-  --bg-surface:  #111113;
-  --bg-raised:   #16161a;
-  --border:      #1e1e20;
-  --border-mid:  #2e2e32;
-  --border-hover:#4a4a52;
-  --text-primary:#f0ede6;
-  --text-muted:  #6b6b72;
-  --text-dim:    #3a3a40;
-  --suit-dim:    #4a4a52;
-  --suit-red:    #8b2020;
-  --card-red:    #c0392b;
-  --green:       #4a7c59;
+  --bg:           #0e0e0f;
+  --bg-surface:   #111113;
+  --bg-raised:    #16161a;
+  --border:       #1e1e20;
+  --border-mid:   #2e2e32;
+  --border-hover: #4a4a52;
+  --text-primary: #f0ede6;
+  --text-muted:   #6b6b72;
+  --text-dim:     #3a3a40;
+  --suit-dim:     #4a4a52;
+  --suit-red:     #8b2020;
+  --card-red:     #c0392b;
+  --green:        #4a7c59;
+  --btn-secondary-border: #5a5a64;
+  --btn-secondary-text:   #c8c4bc;
 }
 
 @media (prefers-color-scheme: light) {
   .home {
-    --bg:          #f5f2eb;
-    --bg-surface:  #edeae1;
-    --bg-raised:   #ffffff;
-    --border:      #dedad0;
-    --border-mid:  #ccc8be;
-    --border-hover:#a8a49c;
-    --text-primary:#0e0e0f;
-    --text-muted:  #6b6b72;
-    --text-dim:    #b0ada6;
-    --suit-dim:    #9a9690;
-    --suit-red:    #8b2020;
-    --card-red:    #c0392b;
-    --green:       #3a6647;
+    --bg:           #f5f2eb;
+    --bg-surface:   #edeae1;
+    --bg-raised:    #ffffff;
+    --border:       #dedad0;
+    --border-mid:   #ccc8be;
+    --border-hover: #a8a49c;
+    --text-primary: #0e0e0f;
+    --text-muted:   #6b6b72;
+    --text-dim:     #b0ada6;
+    --suit-dim:     #9a9690;
+    --suit-red:     #8b2020;
+    --card-red:     #c0392b;
+    --green:        #3a6647;
+    --btn-secondary-border: #ccc8be;
+    --btn-secondary-text:   #0e0e0f;
   }
 }
 
@@ -257,11 +212,7 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
-.logo-suit {
-  font-size: 2.5rem;
-  color: var(--suit-dim);
-}
-
+.logo-suit { font-size: 2.5rem; color: var(--suit-dim); }
 .logo-suit.red { color: var(--suit-red); }
 
 h1 {
@@ -283,9 +234,11 @@ h1 {
 
 .actions {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 320px;
 }
 
 .btn {
@@ -301,26 +254,75 @@ h1 {
 }
 
 .btn-primary {
+  width: 100%;
   background: var(--text-primary);
   color: var(--bg);
   border-color: var(--text-primary);
 }
 
 .btn-primary:hover { opacity: 0.88; }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btn-secondary {
-  background: transparent;
-  color: var(--text-primary);
-  border-color: var(--border-mid);
+.join-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
 }
 
-.btn-secondary:hover { border-color: var(--border-hover); background: var(--bg-surface); }
+.join-input {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  width: 90px;
+  flex-shrink: 0;
+  padding: 0.75rem 0.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  border-radius: 4px;
+  color: var(--text-primary);
+  outline: none;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.join-input::placeholder {
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+}
+
+.join-input:focus { border-color: var(--text-primary); }
+
+.btn-secondary {
+  flex: 1;
+  background: transparent;
+  color: var(--btn-secondary-text);
+  border-color: var(--btn-secondary-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  background: var(--bg-surface);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.join-error {
+  font-size: 0.85rem;
+  color: var(--card-red);
+  text-align: center;
+}
 
 .btn-camera {
   background: transparent;
   color: var(--text-muted);
-  border-color: var(--border-mid);
+  border: 1px solid var(--border-mid);
   margin-top: 1.5rem;
   font-size: 0.85rem;
   padding: 0.6rem 1.5rem;
@@ -337,10 +339,7 @@ h1 {
   align-items: center;
 }
 
-.webcam-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
+.webcam-header { text-align: center; margin-bottom: 2rem; }
 
 .webcam-header h2 {
   font-family: 'Playfair Display', serif;
@@ -350,11 +349,7 @@ h1 {
   color: var(--text-primary);
 }
 
-.webcam-header p {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  max-width: 480px;
-}
+.webcam-header p { font-size: 0.9rem; color: var(--text-muted); max-width: 480px; }
 
 .webcam-container {
   display: grid;
@@ -387,10 +382,9 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  color: var(--border-mid);
 }
 
-.camera-icon { font-size: 3rem; }
+.camera-icon { font-size: 3rem; color: var(--border-mid); }
 .camera-placeholder p { font-size: 0.85rem; color: var(--text-dim); }
 
 .detection-panel {
@@ -419,11 +413,7 @@ h1 {
   gap: 0.25rem;
 }
 
-.no-card {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  text-align: center;
-}
+.no-card { font-size: 0.85rem; color: var(--text-dim); text-align: center; }
 
 .detected-rank {
   font-family: 'Playfair Display', serif;
@@ -444,12 +434,7 @@ h1 {
   letter-spacing: 0.08em;
 }
 
-.confidence {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
+.confidence { display: flex; flex-direction: column; gap: 0.4rem; }
 .confidence span { font-size: 0.75rem; color: var(--text-muted); }
 
 .confidence-bar {
@@ -466,83 +451,9 @@ h1 {
   transition: width 0.3s ease;
 }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.modal {
-  background: var(--bg-raised);
-  border: 1px solid var(--border-mid);
-  border-radius: 8px;
-  padding: 2.5rem;
-  width: 360px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: center;
-}
-
-.modal h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--text-primary);
-}
-
-.modal p {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.modal-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  line-height: 1;
-}
-
-.modal-close:hover { color: var(--text-primary); }
-
-.code-inputs { display: flex; gap: 0.75rem; }
-
-.code-char {
-  width: 56px;
-  height: 64px;
-  text-align: center;
-  font-family: 'Playfair Display', serif;
-  font-size: 1.75rem;
-  font-weight: 700;
-  background: var(--bg);
-  border: 1px solid var(--border-mid);
-  border-radius: 4px;
-  color: var(--text-primary);
-  outline: none;
-  text-transform: uppercase;
-  transition: border-color 0.15s;
-}
-
-.code-char:focus { border-color: var(--text-primary); }
-
-.join-error { color: var(--card-red); font-size: 0.85rem; }
-
 @media (max-width: 640px) {
   h1 { font-size: 2.5rem; }
   .suits-bg { font-size: 8rem; gap: 1rem; }
   .webcam-container { grid-template-columns: 1fr; }
-  .detection-panel { flex-direction: row; flex-wrap: wrap; }
 }
 </style>

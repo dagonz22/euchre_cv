@@ -79,6 +79,7 @@
 import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import PlayingCard from '@/components/PlayingCard.vue'
+import { useCardDetection } from '@/composables/useCardDetection'
 
 const router = useRouter()
 
@@ -89,7 +90,7 @@ const videoEl = ref(null)
 const cameraActive = ref(false)
 let mediaStream = null
 
-const detectedCard = ref(null)
+const { detectedCard, startDetection, stopDetection } = useCardDetection(videoEl)
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -117,16 +118,17 @@ async function toggleCamera() {
     return
   }
   try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
+    mediaStream = await navigator.mediaDevices.getUserMedia({video: true})
     videoEl.value.srcObject = mediaStream
     cameraActive.value = true
-    startDetection()    // ← this line must be here
+    startDetection()
   } catch (err) {
     console.error('Camera error:', err)
   }
 }
 
 onUnmounted(() => {
+  stopDetection()
   mediaStream?.getTracks().forEach(t => t.stop())
 })
 </script>
@@ -135,44 +137,48 @@ onUnmounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
 
 .home {
-  --bg:           #0e0e0f;
-  --bg-surface:   #111113;
-  --bg-raised:    #16161a;
-  --border:       #1e1e20;
-  --border-mid:   #2e2e32;
+  --bg: #0e0e0f;
+  --bg-surface: #111113;
+  --bg-raised: #16161a;
+  --border: #1e1e20;
+  --border-mid: #2e2e32;
   --border-hover: #4a4a52;
   --text-primary: #f0ede6;
-  --text-muted:   #6b6b72;
-  --text-dim:     #3a3a40;
-  --suit-dim:     #4a4a52;
-  --suit-red:     #8b2020;
-  --card-red:     #c0392b;
-  --green:        #4a7c59;
+  --text-muted: #6b6b72;
+  --text-dim: #3a3a40;
+  --suit-dim: #4a4a52;
+  --suit-red: #8b2020;
+  --card-red: #c0392b;
+  --green: #4a7c59;
   --btn-secondary-border: #5a5a64;
-  --btn-secondary-text:   #c8c4bc;
+  --btn-secondary-text: #c8c4bc;
 }
 
 @media (prefers-color-scheme: light) {
   .home {
-    --bg:           #f5f2eb;
-    --bg-surface:   #edeae1;
-    --bg-raised:    #ffffff;
-    --border:       #dedad0;
-    --border-mid:   #ccc8be;
+    --bg: #f5f2eb;
+    --bg-surface: #edeae1;
+    --bg-raised: #ffffff;
+    --border: #dedad0;
+    --border-mid: #ccc8be;
     --border-hover: #a8a49c;
     --text-primary: #0e0e0f;
-    --text-muted:   #6b6b72;
-    --text-dim:     #b0ada6;
-    --suit-dim:     #9a9690;
-    --suit-red:     #8b2020;
-    --card-red:     #c0392b;
-    --green:        #3a6647;
+    --text-muted: #6b6b72;
+    --text-dim: #b0ada6;
+    --suit-dim: #9a9690;
+    --suit-red: #8b2020;
+    --card-red: #c0392b;
+    --green: #3a6647;
     --btn-secondary-border: #ccc8be;
-    --btn-secondary-text:   #0e0e0f;
+    --btn-secondary-text: #0e0e0f;
   }
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 .home {
   min-height: 100vh;
@@ -213,8 +219,14 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
-.logo-suit { font-size: 2.5rem; color: var(--suit-dim); }
-.logo-suit.red { color: var(--suit-red); }
+.logo-suit {
+  font-size: 2.5rem;
+  color: var(--suit-dim);
+}
+
+.logo-suit.red {
+  color: var(--suit-red);
+}
 
 h1 {
   font-family: 'Playfair Display', serif;
@@ -261,7 +273,9 @@ h1 {
   border-color: var(--text-primary);
 }
 
-.btn-primary:hover { opacity: 0.88; }
+.btn-primary:hover {
+  opacity: 0.88;
+}
 
 .join-row {
   display: flex;
@@ -295,7 +309,9 @@ h1 {
   font-weight: 400;
 }
 
-.join-input:focus { border-color: var(--text-primary); }
+.join-input:focus {
+  border-color: var(--text-primary);
+}
 
 .btn-secondary {
   flex: 1;
@@ -329,7 +345,10 @@ h1 {
   padding: 0.6rem 1.5rem;
 }
 
-.btn-camera:hover { color: var(--text-primary); border-color: var(--border-hover); }
+.btn-camera:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
 
 .webcam-section {
   max-width: 860px;
@@ -340,7 +359,10 @@ h1 {
   align-items: center;
 }
 
-.webcam-header { text-align: center; margin-bottom: 2rem; }
+.webcam-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
 
 .webcam-header h2 {
   font-family: 'Playfair Display', serif;
@@ -350,7 +372,11 @@ h1 {
   color: var(--text-primary);
 }
 
-.webcam-header p { font-size: 0.9rem; color: var(--text-muted); max-width: 480px; }
+.webcam-header p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 480px;
+}
 
 .webcam-container {
   display: grid;
@@ -385,8 +411,15 @@ h1 {
   gap: 0.75rem;
 }
 
-.camera-icon { font-size: 3rem; color: var(--border-mid); }
-.camera-placeholder p { font-size: 0.85rem; color: var(--text-dim); }
+.camera-icon {
+  font-size: 3rem;
+  color: var(--border-mid);
+}
+
+.camera-placeholder p {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
 
 .detection-panel {
   display: flex;
@@ -414,29 +447,22 @@ h1 {
   gap: 0.25rem;
 }
 
-.no-card { font-size: 0.85rem; color: var(--text-dim); text-align: center; }
-
-.detected-rank {
-  font-family: 'Playfair Display', serif;
-  font-size: 3rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-primary);
+.no-card {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: center;
 }
 
-.detected-suit { font-size: 2.5rem; line-height: 1; }
-.detected-suit.red   { color: var(--card-red); }
-.detected-suit.black { color: var(--text-primary); }
+.confidence {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
 
-.detected-name {
-  font-size: 0.8rem;
+.confidence span {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
-
-.confidence { display: flex; flex-direction: column; gap: 0.4rem; }
-.confidence span { font-size: 0.75rem; color: var(--text-muted); }
 
 .confidence-bar {
   height: 3px;
@@ -453,8 +479,17 @@ h1 {
 }
 
 @media (max-width: 640px) {
-  h1 { font-size: 2.5rem; }
-  .suits-bg { font-size: 8rem; gap: 1rem; }
-  .webcam-container { grid-template-columns: 1fr; }
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  .suits-bg {
+    font-size: 8rem;
+    gap: 1rem;
+  }
+
+  .webcam-container {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

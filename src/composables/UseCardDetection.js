@@ -31,8 +31,10 @@ export function useCardDetection(videoEl) {
     if (!video || video.readyState < 2) return null
     canvas.width  = video.videoWidth
     canvas.height = video.videoHeight
-    ctx.drawImage(video, 0, 0)
-    // Strip the data:image/jpeg;base64, prefix — API wants raw base64
+    ctx.save()
+    ctx.scale(-1, 1)
+    ctx.drawImage(video, -canvas.width, 0)
+    ctx.restore()
     return canvas.toDataURL('image/jpeg', JPEG_QUALITY).split(',')[1]
   }
 

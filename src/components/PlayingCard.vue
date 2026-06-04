@@ -61,7 +61,7 @@ const RANK_MAP = {
   Jack:  'jack',
   Queen: 'queen',
   King:  'king',
-  Ace:   'ace',
+  Ace:   '1',
 }
 
 const SUIT_MAP = {

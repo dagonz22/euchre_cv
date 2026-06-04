@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "build": "npm run copy-cards && vite build",
+    "copy-cards": "cp node_modules/svg-cards/svg-cards.svg public/svg-cards.svg",
+    "dev": "npm run copy-cards && vite",
     "preview": "vite preview",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
@@ -13,6 +14,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "svg-cards": "^4.0.0",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },

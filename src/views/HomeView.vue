@@ -50,15 +50,14 @@
 
         <div class="detection-panel">
           <div class="detection-label">Detected Card</div>
-          <div class="detection-result" :class="{ active: detectedCard }">
-            <template v-if="detectedCard">
-              <span class="detected-rank">{{ detectedCard.rank }}</span>
-              <span class="detected-suit" :class="detectedCard.color">{{ detectedCard.suitSymbol }}</span>
-              <span class="detected-name">{{ detectedCard.suit }}</span>
-            </template>
-            <template v-else>
-              <span class="no-card">No card detected</span>
-            </template>
+          <div class="detection-result">
+            <PlayingCard
+              v-if="detectedCard"
+              :rank="detectedCard.rank"
+              :suit="detectedCard.suit"
+              :width="100"
+            />
+            <span v-else class="no-card">No card detected</span>
           </div>
           <div class="confidence" v-if="detectedCard">
             <div class="confidence-bar">
@@ -79,6 +78,7 @@
 <script setup>
 import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import PlayingCard from '@/components/PlayingCard.vue'
 
 const router = useRouter()
 

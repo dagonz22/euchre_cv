@@ -110,16 +110,17 @@ function joinLobby() {
 
 async function toggleCamera() {
   if (cameraActive.value) {
+    stopDetection()
     mediaStream?.getTracks().forEach(t => t.stop())
     mediaStream = null
     cameraActive.value = false
-    detectedCard.value = null
     return
   }
   try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
     videoEl.value.srcObject = mediaStream
     cameraActive.value = true
+    startDetection()    // ← this line must be here
   } catch (err) {
     console.error('Camera error:', err)
   }

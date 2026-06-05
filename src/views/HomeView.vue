@@ -79,7 +79,7 @@
 import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import PlayingCard from '@/components/PlayingCard.vue'
-import { useCardDetection } from '@/composables/useCardDetection'
+import { useCardDetection } from '@/composables/useCardDetection.js'
 
 const router = useRouter()
 

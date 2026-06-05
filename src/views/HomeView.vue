@@ -10,7 +10,7 @@
         <h1>Euchre</h1>
         <span class="logo-suit red">♥</span>
       </div>
-      <p class="tagline">Play with real cards, virtually.</p>
+      <p class="tagline">Play with real cards, online.</p>
 
       <div class="actions">
         <button class="btn btn-primary" @click="createLobby">
